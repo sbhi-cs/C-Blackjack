@@ -3,20 +3,29 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <locale.h>
+#endif
+
 // struct definitions
 typedef struct card 
 {
     // creates a struct for all the cards
     int value;
+    char displayvalue;
     char *suit;
-    // TODO: add suit symbol
+    char *suitsym;
     bool isdealt;
 } card;
 
 typedef struct hand
 {
+    // creates a struct for player and enemy hands
     card cardsinhand[7]; // yes I know this line is poorly written but i am not tryna make a dynamic array rn especially in a struct
     int cardamount;
+    int totalvalue;
 } hand;
 
 // constant values
@@ -24,6 +33,16 @@ typedef struct hand
 #define suitcount 4
 #define valcount 13
 #define loop 1
+
+// function definition to set terminal
+void set_terminal(void)
+{
+    #ifdef _WIN32
+        SetConsoleOutputCP(CP_UTF8);
+    #else
+        setlocale(LC_ALL, "");
+    #endif // allows unicode printing on terminal on all OS
+}
 
 // function prototypes
 void printdeck(card *deck);
@@ -36,8 +55,12 @@ int hit(card *deck, int cardamnt, hand *userhand);
 
 int main(void)
 {
+    set_terminal(); // calls function to allow unicode printing in terminal
+    
     // define arrays for the suits and values of each card
     char *suits[suitcount] = {"Clubs", "Hearts", "Spades", "Diamonds"}; // MAYBE CHANGE THESE TO ACTUAL SUIT SYMBOLS FOR OUTPUT STUFF ♠ ♣ ♥ ♦
+    char *suitsymbols[suitcount] = {"\u2663", "\u2665", "\u2660", "\u2666"};
+    char displayvalues[valcount] = {'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'};
     int values[valcount] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
     // 1 = ace, 11 = jack, 12 = queen, 13 = king (i know their values are 10 in the actual game)
 
@@ -52,7 +75,9 @@ int main(void)
     for(int i = 0; i < decksize; i++)
     {
         cards[i].suit = suits[i % 4];
+        cards[i].suitsym = suitsymbols[i % 4];
         cards[i].value = values[i / 4];
+        cards[i].displayvalue = displayvalues[i/4];
         cards[i].isdealt = false;
     }
 
@@ -78,24 +103,89 @@ int main(void)
                 return 1;
             }
             player->cardamount = 0;
+            char input[10];
 
             printf("\033[2J\033[H"); 
             fflush(stdout); // clears command line like CTRL + L
             printf("press q to quit\n");
-            
+
+            player->cardamount = hit(cards, player->cardamount, player);
+            player->cardamount = hit(cards, player->cardamount, player); // deals the cards
+
             while(loop == 1)
             {
-                char input[10];
+                player->totalvalue = 0;
+                printf("\033[2J\033[H");
+                fflush(stdout); // clear cli
+
+                // prints all cards
+                printf("Your cards are:\n");
+                for(int i = 0; i < player->cardamount; i++)
+                {
+                    if(player->cardsinhand[i].displayvalue == 'T')
+                    {
+                        printf("%i %s\n", player->cardsinhand[i].value, player->cardsinhand[i].suitsym); // since we want to display 10 as "10" and not as "T"
+                    }
+                    else
+                    {
+                        printf("%c %s\n", player->cardsinhand[i].displayvalue, player->cardsinhand[i].suitsym);
+                    }
+                }
+
+                for(int i = 0; i < player->cardamount; i++)
+                {
+                    if(player->cardsinhand[i].value > 10)
+                    {
+                        player->totalvalue += 10;
+                    }
+                    else
+                    {
+                        player->totalvalue += player->cardsinhand[i].value;
+                    }
+                } // adds up total card value and sets j q and k to 10
+
+                for(int i = 0; i < player->cardamount; i++)
+                {
+                    if(player->cardsinhand[i].value == 1 && (player->totalvalue+10) <= 21)
+                    {
+                        player->totalvalue += 10;
+                    } // aces either become 1 or 11 depending on whats better
+                }
+                printf("Hand Value: %i\n", player->totalvalue); // print players hand value for QoL
+            
+                // checks if player went over 21 or got a blackjack    
+                if(player->totalvalue > 21)
+                {
+                    printf("Bust! You lost D:\n"); // change this when adding money system
+                    return 0; // maybe change this later to ask restart game (unless no money system)
+                }
+                else if(player->totalvalue == 21)
+                {
+                    printf("Blackjack! You won! :D\n");
+                    free(player);
+                    free(cards);
+                    return 0;
+                    // add option to play again (unless no money system)
+                }
+
+                // --SCANF in COMMAND LINE LOOP
+
+                printf("Action (Hit or Stand): ");
+                scanf("%s", input); // add case for if they type anything but hit or stand
+
+                if(strcmp(input, "hit") == 0 || strcmp(input, "Hit") == 0 || strcmp(input, "HIT") == 0) // case where user hits for another card
+                {
                     player->cardamount = hit(cards, player->cardamount, player);
-                    printf("the %ist card in your hand is the: %i of %s\n", player->cardamount, player->cardsinhand[0].value, player->cardsinhand[0].suit);
-                    player->cardamount = hit(cards, player->cardamount, player);
-                    printf("the %ind card you have in your hand is the: %i of %s\n", player->cardamount, player->cardsinhand[1].value, player->cardsinhand[1].suit);
-                    printf("Action (Hit or Stand): ");
-                    scanf("%s", input);
-                    return 2;
-                    // this is just a test program for now i'll write the actual deal program tmr
-                    // the hit func works, so it gives out the first non-dealt card from the shuffled deck :D
-                    // btw 1 is ace, 11 is jack, 12 is queen, 13 is king, ill make them actual values later
+                }
+                else if(strcmp(input, "stand") == 0 || strcmp(input, "Stand") == 0 || strcmp(input, "STAND") == 0)
+                {
+                    printf("You ended with a %i", player->totalvalue); // change this when you add a dealer ai to see if you win or lose
+                    free(player);
+                    free(cards);
+                    return 0;
+                }
+                // TODO: ADD ENEMY DEALER AI
+
             }
         }
         else if(gamecheck == 'n' || gamecheck == 'N')
@@ -168,10 +258,4 @@ int hit(card *deck, int cardamnt, hand *userhand)
         return cardamnt;
     }
     return cardamnt;
-}
-
-void deal(card *deck, int cardamnt,  hand userhand)
-{
-    return; //do this in a sec
-    // literally just hit but twice and only used at the start of the game to deal cards
 }
