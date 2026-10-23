@@ -28,6 +28,7 @@ typedef struct hand
     card cardsinhand[7]; // yes I know this line is poorly written but i am not tryna make a dynamic array rn especially in a struct
     int cardamount;
     int totalvalue;
+    bool standstatus;
 } hand;
 
 // constant values
@@ -54,6 +55,10 @@ void swap(card *a, card *b);
 void shuffle(card *deck);
 
 int hit(card *deck, int cardamnt, hand *userhand);
+
+int gethandval(hand *userhand);
+
+void dealerplay(hand *dealerhand, card *deck);
 
 int main(void)
 {
@@ -98,13 +103,28 @@ int main(void)
         // checks if user wants to play game or not, or just types some random bs
         if(gamecheck == 'y' || gamecheck == 'Y')
         {
-            hand *player = malloc(sizeof(hand)); // REMEMBER TO FREE!!! IMPORTANT
+            hand *player = malloc(sizeof(hand)); // initializes the players hand
             if(player == NULL)
             {
                 free(cards);
                 return 1;
             }
+            hand *dealer = malloc(sizeof(hand)); // initializes the dealers hand
+            if(dealer == NULL)
+            {
+                free(cards);
+                free(player);
+                return 1;
+            }
+            char name[50];
+            printf("Dealer's name (ONE WORD): ");
+            scanf("%s", name);
+
+
             player->cardamount = 0;
+            dealer->cardamount = 0;
+            player->standstatus = false;
+            dealer->standstatus = false;
             char input[10];
 
             printf("\033[2J\033[H"); 
@@ -112,11 +132,16 @@ int main(void)
             printf("press q to quit\n");
 
             player->cardamount = hit(cards, player->cardamount, player);
-            player->cardamount = hit(cards, player->cardamount, player); // deals the cards
+            player->cardamount = hit(cards, player->cardamount, player); // deals the cards to the user
+            dealer->cardamount = hit(cards, dealer->cardamount, dealer);
+            dealer->cardamount = hit(cards, dealer->cardamount, dealer); // deals cards to the dealer
 
             while(loop == 1)
             {
                 player->totalvalue = 0;
+                dealer->totalvalue = 0;
+                input[1] = '\0';
+
                 printf("\033[2J\033[H");
                 fflush(stdout); // clear cli
 
@@ -134,58 +159,148 @@ int main(void)
                     }
                 }
 
-                for(int i = 0; i < player->cardamount; i++)
-                {
-                    if(player->cardsinhand[i].value > 10)
-                    {
-                        player->totalvalue += 10;
-                    }
-                    else
-                    {
-                        player->totalvalue += player->cardsinhand[i].value;
-                    }
-                } // adds up total card value and sets j q and k to 10
+                player->totalvalue = gethandval(player);
 
-                for(int i = 0; i < player->cardamount; i++)
-                {
-                    if(player->cardsinhand[i].value == 1 && (player->totalvalue+10) <= 21)
-                    {
-                        player->totalvalue += 10;
-                    } // aces either become 1 or 11 depending on whats better
-                }
                 printf("Hand Value: %i\n", player->totalvalue); // print players hand value for QoL
             
                 // checks if player went over 21 or got a blackjack    
                 if(player->totalvalue > 21)
                 {
                     printf("Bust! You lost D:\n"); // change this when adding money system
+                    free(player);
+                    free(dealer);
+                    free(cards);
                     return 0; // maybe change this later to ask restart game (unless no money system)
                 }
                 else if(player->totalvalue == 21)
                 {
                     printf("Blackjack! You won! :D\n");
                     free(player);
+                    free(dealer);
+                    free(cards);
+                    return 0;
+                    // add option to play again (unless no money system)
+                }
+                printf("%s's cards are:\n", name);
+                for(int i = 0; i < dealer->cardamount; i++)
+                {
+                    if(dealer->cardsinhand[i].displayvalue == 'T')
+                    {
+                        printf("%i %s\n", dealer->cardsinhand[i].value, dealer->cardsinhand[i].suitsym);
+                    }
+                    else if(dealer->cardamount == 2 && i == 1)
+                    {
+                        printf("?\n");
+                    }
+                    else
+                    {
+                        printf("%c %s\n", dealer->cardsinhand[i].displayvalue, dealer->cardsinhand[i].suitsym);
+                    }
+                }
+                dealer->totalvalue = gethandval(dealer);
+                if(dealer->cardamount == 2)
+                {
+                    printf("Hand value : ?\n");
+                }
+                else
+                {
+                    printf("Hand Value: %i\n", dealer->totalvalue); // print players hand value for QoL
+                }
+            
+                // checks if player went over 21 or got a blackjack    
+                if(dealer->totalvalue > 21)
+                {
+                    printf("%s Busted! You won!\n", name); // change this when adding money system
+                    free(player);
+                    free(dealer);
+                    free(cards);
+                    return 0; // maybe change this later to ask restart game (unless no money system)
+                }
+                else if(dealer->totalvalue == 21)
+                {
+                    printf("%s got a Blackjack! You Lost D:\n", name);
+                    free(player);
+                    free(dealer);
                     free(cards);
                     return 0;
                     // add option to play again (unless no money system)
                 }
 
+
                 // --SCANF in COMMAND LINE LOOP
 
-                printf("Action (Hit or Stand): ");
-                scanf("%s", input); // add case for if they type anything but hit or stand
-
-                if(strcmp(input, "hit") == 0 || strcmp(input, "Hit") == 0 || strcmp(input, "HIT") == 0) // case where user hits for another card
+                if(player->standstatus == false)
+                {
+                    printf("Action (Hit or Stand): ");
+                    scanf("%s", input); // add case for if they type anything but hit or stand
+                }
+                
+                if(strcmp(input, "hit") == 0 || strcmp(input, "Hit") == 0 || strcmp(input, "HIT") == 0 || strcmp(input, "h") == 0 || strcmp(input, "H") == 0) // case where user hits for another card
                 {
                     player->cardamount = hit(cards, player->cardamount, player);
                 }
-                else if(strcmp(input, "stand") == 0 || strcmp(input, "Stand") == 0 || strcmp(input, "STAND") == 0)
+                else if(strcmp(input, "stand") == 0 || strcmp(input, "Stand") == 0 || strcmp(input, "STAND") == 0 || strcmp(input, "s") == 0 || strcmp(input, "S") == 0)
                 {
-                    printf("You ended with a %i", player->totalvalue); // change this when you add a dealer ai to see if you win or lose
-                    free(player);
-                    free(cards);
-                    return 0;
+                    printf("\033[2J\033[H");
+                    fflush(stdout); // clear cli
+                    player->standstatus = true;
+                    if(dealer->standstatus == true)
+                    {
+                        for(int i = 0; i < player->cardamount; i++)
+                        {
+                            if(player->cardsinhand[i].displayvalue == 'T')
+                            {
+                                printf("%i %s\n", player->cardsinhand[i].value, player->cardsinhand[i].suitsym); // since we want to display 10 as "10" and not as "T"
+                            }
+                            else
+                            {
+                                printf("%c %s\n", player->cardsinhand[i].displayvalue, player->cardsinhand[i].suitsym);
+                            }
+                        } // reveals the players cards
+                        printf("Player's Final Value: %i\n", player->totalvalue); // reveals the players final value
+
+                        for(int i = 0; i < dealer->cardamount; i++)
+                        {
+                            if(dealer->cardsinhand[i].displayvalue == 'T')
+                            {
+                                printf("%i %s\n", dealer->cardsinhand[i].value, dealer->cardsinhand[i].suitsym);
+                            }
+                            else
+                            {
+                                printf("%c %s\n", dealer->cardsinhand[i].displayvalue, dealer->cardsinhand[i].suitsym);
+                            }
+                        } // reveals the dealers cards
+                        printf("%s's Final Value: %i\n", name, dealer->totalvalue); // reveals the dealers final value
+
+                        if(player->totalvalue > dealer->totalvalue)
+                        {
+                            printf("You Won by Value! :D");
+                        }
+                        else if(dealer->totalvalue > player->totalvalue)
+                        {
+                            printf("You Lost by Value D:");
+                        }
+                        else
+                        {
+                            printf("You tied with %s!\n", name);
+                        }
+                        
+                        free(player);
+                        free(dealer);
+                        free(cards);
+                        return 0;
+                    }
                 }
+                else if(player->standstatus == true) // dealer keeps playing if player has stood
+                {
+                    dealerplay(dealer, cards);
+                    continue;
+                }
+                else
+                {
+                    continue;
+                }
+                dealerplay(dealer, cards);
                 // TODO: ADD ENEMY DEALER AI
 
             }
@@ -260,4 +375,41 @@ int hit(card *deck, int cardamnt, hand *userhand)
         return cardamnt;
     }
     return cardamnt;
+}
+
+int gethandval(hand *userhand)
+{
+    for(int i = 0; i < userhand->cardamount; i++)
+    {
+        if(userhand->cardsinhand[i].value > 10)
+        {
+            userhand->totalvalue += 10;
+        }
+        else
+        {
+            userhand->totalvalue += userhand->cardsinhand[i].value;
+        }
+    } // adds up total card value and sets j q and k to 10
+
+    for(int i = 0; i < userhand->cardamount; i++)
+    {
+        if(userhand->cardsinhand[i].value == 1 && (userhand->totalvalue+10) <= 21)
+        {
+            userhand->totalvalue += 10;
+        } // aces either become 1 or 11 depending on whats better
+    }
+    return userhand->totalvalue;
+}
+
+void dealerplay(hand *dealerhand, card *deck)
+{
+    if(dealerhand->totalvalue < 17)
+    {
+        dealerhand->cardamount = hit(deck, dealerhand->cardamount, dealerhand);
+    }
+    else
+    {
+        dealerhand->standstatus = true;
+    }
+    return;
 }
