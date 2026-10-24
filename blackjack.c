@@ -1,3 +1,7 @@
+// BIG IMPORTANT NOTE: THERE ARE 2 MAJOR ISSUES WITH THIS CODE THAT I SHOULD FIX NEXT SESSION
+// 1. ABSTRACT THAT STRING OF CODE THAT RESTARTS THE GAME, ITS MAKING THE CODE TOO LONG AND UNREADABLE
+// 2. WHEN THAT'S DONE, FIX IT SO THAT WHEN THE DEALER BUSTS AFTER YOU STAND WE GET TO SEE OUR VALUE COMPARED TO HIS VALUE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h> // for online compiler compatibility
@@ -24,9 +28,10 @@ typedef struct card
 
 typedef struct hand
 {
-    // creates a struct for player and enemy hands
-    card cardsinhand[7]; // yes I know this line is poorly written but i am not tryna make a dynamic array rn especially in a struct
+    // creates a struct for player and enemy hands 
+    // yes I know this line is poorly written but i am not tryna make a dynamic array rn especially in a struct
     int cardamount;
+    card cardsinhand[9]; 
     int totalvalue;
     bool standstatus;
 } hand;
@@ -59,6 +64,8 @@ int hit(card *deck, int cardamnt, hand *userhand);
 int gethandval(hand *userhand);
 
 void dealerplay(hand *dealerhand, card *deck);
+
+bool rescheck(char restartcheck);
 
 int main(void)
 {
@@ -103,23 +110,40 @@ int main(void)
         // checks if user wants to play game or not, or just types some random bs
         if(gamecheck == 'y' || gamecheck == 'Y')
         {
-            hand *player = malloc(sizeof(hand)); // initializes the players hand
+            char name[50];
+            printf("Dealer's name (ONE WORD): ");
+            scanf("%s", name);
+
+            hand *player;
+            hand *dealer;
+
+            printf("\033[2J\033[H"); 
+            fflush(stdout); // clears command line like CTRL + L
+
+            gamerestart: ; // marker to send user to if they want to play again
+
+            if(cards[40].isdealt == true)
+            {
+                for(int i = 0; i < decksize; i++)
+                {
+                    cards[i].isdealt = false;
+                }
+                shuffle(cards);
+            }
+
+            player = malloc(sizeof(hand)); // initializes the players hand
             if(player == NULL)
             {
                 free(cards);
                 return 1;
             }
-            hand *dealer = malloc(sizeof(hand)); // initializes the dealers hand
+            dealer = malloc(sizeof(hand)); // initializes the dealers hand
             if(dealer == NULL)
             {
                 free(cards);
                 free(player);
                 return 1;
             }
-            char name[50];
-            printf("Dealer's name (ONE WORD): ");
-            scanf("%s", name);
-
 
             player->cardamount = 0;
             dealer->cardamount = 0;
@@ -160,27 +184,70 @@ int main(void)
                 }
 
                 player->totalvalue = gethandval(player);
-
                 printf("Hand Value: %i\n", player->totalvalue); // print players hand value for QoL
-            
+
                 // checks if player went over 21 or got a blackjack    
                 if(player->totalvalue > 21)
                 {
+                    char restartinput = '\0';
                     printf("Bust! You lost D:\n"); // change this when adding money system
                     free(player);
                     free(dealer);
-                    free(cards);
-                    return 0; // maybe change this later to ask restart game (unless no money system)
+                    
+                    bool restartcheck;
+
+                    while(loop == 1)
+                    {
+                        printf("Play again? (Y/N) ");
+                        scanf(" %c", &restartinput);
+                        while(getchar() != '\n');
+                        restartcheck = rescheck(restartinput);
+                        if(restartcheck == true || restartcheck == false)
+                        {
+                            break;
+                        }
+                    }
+                    if(restartcheck == true)
+                    {
+                        goto gamerestart; // go back to the memory allocation definitions
+                    }
+                    else if(restartcheck == false)
+                    {
+                        goto endofcode; // go to end of program and close program if user tired of blackjack
+                    }
                 }
                 else if(player->totalvalue == 21)
                 {
+                    char restartinput = '\n';
                     printf("Blackjack! You won! :D\n");
                     free(player);
                     free(dealer);
-                    free(cards);
-                    return 0;
-                    // add option to play again (unless no money system)
+
+                    bool restartcheck;
+                    
+                    while(loop == 1)
+                    {
+                        printf("Play again? (Y/N) ");
+                        scanf(" %c", &restartinput);
+                        while(getchar() != '\n');
+                        restartcheck = rescheck(restartinput);
+                        if(restartcheck == true || restartcheck == false)
+                        {
+                            break;
+                        }
+                    }
+
+                    if(restartcheck == true)
+                    {
+                        goto gamerestart;
+                    }
+                    else if(restartcheck == false)
+                    {
+                        goto endofcode;
+                    }
                 }
+            
+
                 printf("%s's cards are:\n", name);
                 for(int i = 0; i < dealer->cardamount; i++)
                 {
@@ -197,6 +264,9 @@ int main(void)
                         printf("%c %s\n", dealer->cardsinhand[i].displayvalue, dealer->cardsinhand[i].suitsym);
                     }
                 }
+
+
+                
                 dealer->totalvalue = gethandval(dealer);
                 if(dealer->cardamount == 2)
                 {
@@ -207,23 +277,66 @@ int main(void)
                     printf("Hand Value: %i\n", dealer->totalvalue); // print players hand value for QoL
                 }
             
-                // checks if player went over 21 or got a blackjack    
+                // checks if dealer went over 21 or got a blackjack    
                 if(dealer->totalvalue > 21)
                 {
+                    char restartinput = '\n';
                     printf("%s Busted! You won!\n", name); // change this when adding money system
                     free(player);
                     free(dealer);
-                    free(cards);
-                    return 0; // maybe change this later to ask restart game (unless no money system)
+
+                    bool restartcheck;
+                    
+                    while(loop == 1)
+                    {
+                        printf("Play again? (Y/N) ");
+                        scanf(" %c", &restartinput);
+                        while(getchar() != '\n');
+                        restartcheck = rescheck(restartinput);
+                        if(restartcheck == true || restartcheck == false)
+                        {
+                            break;
+                        }
+                    }
+
+                    if(restartcheck == true)
+                    {
+                        goto gamerestart;
+                    }
+                    else if(restartcheck == false)
+                    {
+                        goto endofcode;
+                    }
                 }
                 else if(dealer->totalvalue == 21)
                 {
+                    char restartinput = '\0';
                     printf("%s got a Blackjack! You Lost D:\n", name);
                     free(player);
                     free(dealer);
-                    free(cards);
-                    return 0;
-                    // add option to play again (unless no money system)
+
+                    bool restartcheck;
+
+                    while(loop == 1)
+                    {
+                        printf("Play again? (Y/N) ");
+                        scanf(" %c", &restartinput);
+                        while(getchar() != '\n');
+                        restartcheck = rescheck(restartinput);
+                        if(restartcheck == true || restartcheck == false)
+                        {
+                            break;
+                        }
+                    }
+
+                    if(restartcheck == true)
+                    {
+                        goto gamerestart;
+                    }
+                    else if(restartcheck == false)
+                    {
+                        goto endofcode;
+                    }                    
                 }
 
 
@@ -244,6 +357,74 @@ int main(void)
                     printf("\033[2J\033[H");
                     fflush(stdout); // clear cli
                     player->standstatus = true;
+
+                    while(dealer->standstatus == false)
+                    {
+                        dealer->totalvalue = 0;
+                        gethandval(dealer);
+                        dealerplay(dealer, cards);
+                if(dealer->totalvalue > 21)
+                {
+                    char restartinput = '\n';
+                    printf("%s Busted! You won!\n", name); // change this when adding money system
+                    free(player);
+                    free(dealer);
+
+                    bool restartcheck;
+                    
+                    while(loop == 1)
+                    {
+                        printf("Play again? (Y/N) ");
+                        scanf(" %c", &restartinput);
+                        while(getchar() != '\n');
+                        restartcheck = rescheck(restartinput);
+                        if(restartcheck == true || restartcheck == false)
+                        {
+                            break;
+                        }
+                    }
+
+                    if(restartcheck == true)
+                    {
+                        goto gamerestart;
+                    }
+                    else if(restartcheck == false)
+                    {
+                        goto endofcode;
+                    }
+                }
+                else if(dealer->totalvalue == 21)
+                {
+                    char restartinput = '\0';
+                    printf("%s got a Blackjack! You Lost D:\n", name);
+                    free(player);
+                    free(dealer);
+
+                    bool restartcheck;
+
+                    while(loop == 1)
+                    {
+                        printf("Play again? (Y/N) ");
+                        scanf(" %c", &restartinput);
+                        while(getchar() != '\n');
+                        restartcheck = rescheck(restartinput);
+                        if(restartcheck == true || restartcheck == false)
+                        {
+                            break;
+                        }
+                    }
+
+                    if(restartcheck == true)
+                    {
+                        goto gamerestart;
+                    }
+                    else if(restartcheck == false)
+                    {
+                        goto endofcode;
+                    }                    
+                }
+                    }
+
                     if(dealer->standstatus == true)
                     {
                         for(int i = 0; i < player->cardamount; i++)
@@ -274,11 +455,11 @@ int main(void)
 
                         if(player->totalvalue > dealer->totalvalue)
                         {
-                            printf("You Won by Value! :D");
+                            printf("You Won by Value! :D\n");
                         }
                         else if(dealer->totalvalue > player->totalvalue)
                         {
-                            printf("You Lost by Value D:");
+                            printf("You Lost by Value D:\n");
                         }
                         else
                         {
@@ -287,27 +468,41 @@ int main(void)
                         
                         free(player);
                         free(dealer);
-                        free(cards);
-                        return 0;
+
+                        char restartinput = '\0';
+                        bool restartcheck;
+
+                        while(loop == 1)
+                        {
+                            printf("Play again? (Y/N) ");
+                            scanf(" %c", &restartinput);
+                            while(getchar() != '\n');
+                            restartcheck = rescheck(restartinput);
+                            if(restartcheck == true || restartcheck == false)
+                            {
+                                break;
+                            }
+                        }
+
+                        if(restartcheck == true)
+                        {
+                            goto gamerestart;
+                        }
+                        else if(restartcheck == false)
+                        {
+                            goto endofcode;
+                        }
                     }
-                }
-                else if(player->standstatus == true) // dealer keeps playing if player has stood
-                {
-                    dealerplay(dealer, cards);
-                    continue;
                 }
                 else
                 {
                     continue;
                 }
-                dealerplay(dealer, cards);
-                // TODO: ADD ENEMY DEALER AI
 
             }
         }
         else if(gamecheck == 'n' || gamecheck == 'N')
         {
-            printf("Closing game, Money will not save\n");
             break;
         }
         else
@@ -318,6 +513,9 @@ int main(void)
 
     }
 
+
+    endofcode: ; // marker to send people to if they dont want to play blackjack anymore
+    printf("Closing game, Money will not save\n"); // change this when adding a wallet system
     free(cards);
     return 0;
 
@@ -355,8 +553,8 @@ void shuffle(card *deck)
         // i may or may not have taken this from a website
         for(int i = decksize-1; i > 0; i--)
         {
-            int j = rand() % i;
-            swap(&deck[i], &deck[j]);
+            int k = rand() % (i + 1);
+            swap(&deck[i], &deck[k]);
         }
     }
 }
@@ -412,4 +610,16 @@ void dealerplay(hand *dealerhand, card *deck)
         dealerhand->standstatus = true;
     }
     return;
+}
+
+bool rescheck(char restartcheck)
+{
+    if(restartcheck == 'y' || restartcheck == 'Y')
+    {
+        return true;
+    }
+    else if(restartcheck == 'n' || restartcheck == 'N')
+    {
+        return false;
+    }
 }
