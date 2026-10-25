@@ -65,7 +65,11 @@ int gethandval(hand *userhand);
 
 void dealerplay(hand *dealerhand, card *deck);
 
-bool rescheck(char restartcheck);
+int rescheck(char restartcheck);
+
+bool restartcheck(void);
+
+void printcards(hand *playerhand, char whodis);
 
 int main(void)
 {
@@ -171,77 +175,38 @@ int main(void)
 
                 // prints all cards
                 printf("Your cards are:\n");
-                for(int i = 0; i < player->cardamount; i++)
-                {
-                    if(player->cardsinhand[i].displayvalue == 'T')
-                    {
-                        printf("%i %s\n", player->cardsinhand[i].value, player->cardsinhand[i].suitsym); // since we want to display 10 as "10" and not as "T"
-                    }
-                    else
-                    {
-                        printf("%c %s\n", player->cardsinhand[i].displayvalue, player->cardsinhand[i].suitsym);
-                    }
-                }
+                printcards(player, 'p');
 
                 player->totalvalue = gethandval(player);
-                printf("Hand Value: %i\n", player->totalvalue); // print players hand value for QoL
+                printf("Hand Value: %i\n\n", player->totalvalue); // print players hand value for QoL
 
                 // checks if player went over 21 or got a blackjack    
                 if(player->totalvalue > 21)
                 {
-                    char restartinput = '\0';
                     printf("Bust! You lost D:\n"); // change this when adding money system
                     free(player);
                     free(dealer);
                     
-                    bool restartcheck;
-
-                    while(loop == 1)
-                    {
-                        printf("Play again? (Y/N) ");
-                        scanf(" %c", &restartinput);
-                        while(getchar() != '\n');
-                        restartcheck = rescheck(restartinput);
-                        if(restartcheck == true || restartcheck == false)
-                        {
-                            break;
-                        }
-                    }
-                    if(restartcheck == true)
+                    if(restartcheck() == true)
                     {
                         goto gamerestart; // go back to the memory allocation definitions
                     }
-                    else if(restartcheck == false)
+                    else
                     {
                         goto endofcode; // go to end of program and close program if user tired of blackjack
                     }
                 }
                 else if(player->totalvalue == 21)
                 {
-                    char restartinput = '\n';
                     printf("Blackjack! You won! :D\n");
                     free(player);
-                    free(dealer);
+                    free(dealer);                    
 
-                    bool restartcheck;
-                    
-                    while(loop == 1)
-                    {
-                        printf("Play again? (Y/N) ");
-                        scanf(" %c", &restartinput);
-                        while(getchar() != '\n');
-                        restartcheck = rescheck(restartinput);
-                        if(restartcheck == true || restartcheck == false)
-                        {
-                            break;
-                        }
-                    }
-
-                    if(restartcheck == true)
+                    if(restartcheck() == true)
                     {
                         goto gamerestart;
                     }
-                    else if(restartcheck == false)
+                    else
                     {
                         goto endofcode;
                     }
@@ -249,97 +214,30 @@ int main(void)
             
 
                 printf("%s's cards are:\n", name);
-                for(int i = 0; i < dealer->cardamount; i++)
-                {
-                    if(dealer->cardsinhand[i].displayvalue == 'T')
-                    {
-                        printf("%i %s\n", dealer->cardsinhand[i].value, dealer->cardsinhand[i].suitsym);
-                    }
-                    else if(dealer->cardamount == 2 && i == 1)
-                    {
-                        printf("?\n");
-                    }
-                    else
-                    {
-                        printf("%c %s\n", dealer->cardsinhand[i].displayvalue, dealer->cardsinhand[i].suitsym);
-                    }
-                }
-
-
+                printcards(dealer, 'd');
                 
                 dealer->totalvalue = gethandval(dealer);
-                if(dealer->cardamount == 2)
+                if(dealer->totalvalue == 21)
                 {
-                    printf("Hand value : ?\n");
-                }
-                else
-                {
-                    printf("Hand Value: %i\n", dealer->totalvalue); // print players hand value for QoL
-                }
-            
-                // checks if dealer went over 21 or got a blackjack    
-                if(dealer->totalvalue > 21)
-                {
-                    char restartinput = '\n';
-                    printf("%s Busted! You won!\n", name); // change this when adding money system
-                    free(player);
-                    free(dealer);
-
-                    bool restartcheck;
-                    
-                    while(loop == 1)
-                    {
-                        printf("Play again? (Y/N) ");
-                        scanf(" %c", &restartinput);
-                        while(getchar() != '\n');
-                        restartcheck = rescheck(restartinput);
-                        if(restartcheck == true || restartcheck == false)
-                        {
-                            break;
-                        }
-                    }
-
-                    if(restartcheck == true)
-                    {
-                        goto gamerestart;
-                    }
-                    else if(restartcheck == false)
-                    {
-                        goto endofcode;
-                    }
-                }
-                else if(dealer->totalvalue == 21)
-                {
-                    char restartinput = '\0';
+                    printcards(player, 'p');
+                    printcards(dealer, 'p'); // since dealer has more than 2 cards
                     printf("%s got a Blackjack! You Lost D:\n", name);
                     free(player);
                     free(dealer);
 
-                    bool restartcheck;
-
-                    while(loop == 1)
-                    {
-                        printf("Play again? (Y/N) ");
-                        scanf(" %c", &restartinput);
-                        while(getchar() != '\n');
-                        restartcheck = rescheck(restartinput);
-                        if(restartcheck == true || restartcheck == false)
-                        {
-                            break;
-                        }
-                    }
-
-                    if(restartcheck == true)
+                    if(restartcheck() == true)
                     {
                         goto gamerestart;
                     }
-                    else if(restartcheck == false)
+                    else
                     {
                         goto endofcode;
                     }                    
                 }
 
+                printf("Hand value: ?\n");
 
+                
                 // --SCANF in COMMAND LINE LOOP
 
                 if(player->standstatus == false)
@@ -365,60 +263,45 @@ int main(void)
                         dealerplay(dealer, cards);
                 if(dealer->totalvalue > 21)
                 {
-                    char restartinput = '\n';
+                    printf("Player's Cards:\n");
+                    printcards(player, 'p');
+                    printf("Hand Value: %i\n\n", player->totalvalue);
+
+                    printf("%s's Cards:\n", name);
+                    printcards(dealer, 'p'); // since dealer has more than 2 cards now
+
                     printf("%s Busted! You won!\n", name); // change this when adding money system
                     free(player);
-                    free(dealer);
+                    free(dealer);                    
 
-                    bool restartcheck;
-                    
-                    while(loop == 1)
-                    {
-                        printf("Play again? (Y/N) ");
-                        scanf(" %c", &restartinput);
-                        while(getchar() != '\n');
-                        restartcheck = rescheck(restartinput);
-                        if(restartcheck == true || restartcheck == false)
-                        {
-                            break;
-                        }
-                    }
-
-                    if(restartcheck == true)
+                    if(restartcheck() == true)
                     {
                         goto gamerestart;
                     }
-                    else if(restartcheck == false)
+                    else
                     {
                         goto endofcode;
                     }
                 }
                 else if(dealer->totalvalue == 21)
                 {
-                    char restartinput = '\0';
+                    printf("Player's Cards:\n");
+                    printcards(player, 'p');
+                    printf("Hand Value: %i\n\n", player->totalvalue);
+
+                    printf("%s's Cards:\n", name);
+                    printcards(dealer, 'p'); // since dealer has more than 2 cards now
+                    printf("Hand Value: 21\n", player->totalvalue);
+
                     printf("%s got a Blackjack! You Lost D:\n", name);
                     free(player);
                     free(dealer);
 
-                    bool restartcheck;
-
-                    while(loop == 1)
-                    {
-                        printf("Play again? (Y/N) ");
-                        scanf(" %c", &restartinput);
-                        while(getchar() != '\n');
-                        restartcheck = rescheck(restartinput);
-                        if(restartcheck == true || restartcheck == false)
-                        {
-                            break;
-                        }
-                    }
-
-                    if(restartcheck == true)
+                    if(restartcheck() == true)
                     {
                         goto gamerestart;
                     }
-                    else if(restartcheck == false)
+                    else
                     {
                         goto endofcode;
                     }                    
@@ -427,30 +310,14 @@ int main(void)
 
                     if(dealer->standstatus == true)
                     {
-                        for(int i = 0; i < player->cardamount; i++)
-                        {
-                            if(player->cardsinhand[i].displayvalue == 'T')
-                            {
-                                printf("%i %s\n", player->cardsinhand[i].value, player->cardsinhand[i].suitsym); // since we want to display 10 as "10" and not as "T"
-                            }
-                            else
-                            {
-                                printf("%c %s\n", player->cardsinhand[i].displayvalue, player->cardsinhand[i].suitsym);
-                            }
-                        } // reveals the players cards
+                        printf("Player's Cards:\n");
+                        printcards(player, 'p');
+                        // reveals the players cards
                         printf("Player's Final Value: %i\n", player->totalvalue); // reveals the players final value
 
-                        for(int i = 0; i < dealer->cardamount; i++)
-                        {
-                            if(dealer->cardsinhand[i].displayvalue == 'T')
-                            {
-                                printf("%i %s\n", dealer->cardsinhand[i].value, dealer->cardsinhand[i].suitsym);
-                            }
-                            else
-                            {
-                                printf("%c %s\n", dealer->cardsinhand[i].displayvalue, dealer->cardsinhand[i].suitsym);
-                            }
-                        } // reveals the dealers cards
+                        printf("%s's Cards:\n", name);
+                        printcards(dealer, 'p'); // since dealer has more than 2 cards
+                        // reveals the dealers cards
                         printf("%s's Final Value: %i\n", name, dealer->totalvalue); // reveals the dealers final value
 
                         if(player->totalvalue > dealer->totalvalue)
@@ -469,26 +336,11 @@ int main(void)
                         free(player);
                         free(dealer);
 
-                        char restartinput = '\0';
-                        bool restartcheck;
-
-                        while(loop == 1)
-                        {
-                            printf("Play again? (Y/N) ");
-                            scanf(" %c", &restartinput);
-                            while(getchar() != '\n');
-                            restartcheck = rescheck(restartinput);
-                            if(restartcheck == true || restartcheck == false)
-                            {
-                                break;
-                            }
-                        }
-
-                        if(restartcheck == true)
+                        if(restartcheck() == true)
                         {
                             goto gamerestart;
                         }
-                        else if(restartcheck == false)
+                        else
                         {
                             goto endofcode;
                         }
@@ -515,7 +367,7 @@ int main(void)
 
 
     endofcode: ; // marker to send people to if they dont want to play blackjack anymore
-    printf("Closing game, Money will not save\n"); // change this when adding a wallet system
+    printf("Closing game\n"); // change this when adding a wallet system
     free(cards);
     return 0;
 
@@ -612,14 +464,98 @@ void dealerplay(hand *dealerhand, card *deck)
     return;
 }
 
-bool rescheck(char restartcheck)
+int rescheck(char restartcheck)
 {
     if(restartcheck == 'y' || restartcheck == 'Y')
     {
-        return true;
+        return 2;
     }
     else if(restartcheck == 'n' || restartcheck == 'N')
     {
-        return false;
+        return 1;
     }
+}
+
+bool restartcheck(void)
+{
+    int restartcheck = 0; // 0 means no value, 1 means false, 2 means true
+    char restartinput = '\0';
+        while(loop == 1)
+        {
+            printf("Play again? (Y/N) ");
+            scanf(" %c", &restartinput);
+            while(getchar() != '\n');
+            restartcheck = rescheck(restartinput);
+            if(restartcheck == 2)
+            {
+                return true;
+            }
+            else if(restartcheck == 1)
+            {
+                return false;
+            }
+        }
+}
+
+void printcards(hand *playerhand, char whodis)
+{
+    for(int i = 0; i < playerhand->cardamount; i++)
+    {
+        printf(" ┌───────┐ ");
+    }
+    printf("\n");
+
+    for(int i = 0; i < playerhand->cardamount; i++)
+    {
+        if(whodis == 'd' && i == 1)
+        {
+            printf(" │ ?     │ ", playerhand->cardsinhand[i].displayvalue);
+        }
+        else if(playerhand->cardsinhand[i].displayvalue == 'T')
+        {
+            printf(" │ %i    │ ", playerhand->cardsinhand[i].value);
+        }
+        else
+        {
+            printf(" │ %c     │ ", playerhand->cardsinhand[i].displayvalue);
+        }
+    }
+    printf("\n");
+
+    for(int i = 0; i < playerhand->cardamount; i++)
+    {
+        if(whodis == 'd' && i == 1)
+        {
+            printf(" │   ?   │ ");
+        }
+        else
+        {
+            printf(" │   %s   │ ", playerhand->cardsinhand[i].suitsym);
+        }
+    }
+    printf("\n");
+
+    
+    for(int i = 0; i < playerhand->cardamount; i++)
+    {
+        if(whodis == 'd' && i == 1)
+        {
+            printf(" │     ? │ ");
+        }
+        else if(playerhand->cardsinhand[i].displayvalue == 'T')
+        {
+            printf(" │    %i │ ", playerhand->cardsinhand[i].value);
+        }
+        else
+        {
+            printf(" │     %c │ ", playerhand->cardsinhand[i].displayvalue);
+        }
+    }
+    printf("\n");
+    
+    for(int i = 0; i < playerhand->cardamount; i++)
+    {
+        printf(" └───────┘ ");
+    }
+    printf("\n");
 }
