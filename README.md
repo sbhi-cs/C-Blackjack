@@ -39,7 +39,7 @@ This entire game was written in C, and runs on the command line. Here's how to p
 
 ## **BOOM!** Now you can play blackjack on your command line!
 
-##How to play blackjack (if you don't know):
+## How to play blackjack (if you don't know):
 * Each card has a value based on its number (Jack Queen and King are all worth 10)
 * Aces are worth either 1 or 11
 * You have 2 options: Hit and Stand
@@ -57,6 +57,10 @@ This entire game was written in C, and runs on the command line. Here's how to p
 * ASCII Card Art
 * Replayability
 * A dealer AI that YOU CAN NAME!!!
+
+JUST LOOK AT THIS COOL ART!
+<img width="307" height="357" alt="image" src="https://github.com/user-attachments/assets/2b02c861-261a-40ea-930e-6c90264ac976" />
+
 
 ## Inside this folder, there is:
 * Main blackjack program, which is what you will be running to play the game
