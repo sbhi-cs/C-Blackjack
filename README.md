@@ -59,6 +59,7 @@ This entire game was written in C, and runs on the command line. Here's how to p
 * A dealer AI that YOU CAN NAME!!!
 
 JUST LOOK AT THIS COOL ART!
+
 <img width="307" height="357" alt="image" src="https://github.com/user-attachments/assets/2b02c861-261a-40ea-930e-6c90264ac976" />
 
 
