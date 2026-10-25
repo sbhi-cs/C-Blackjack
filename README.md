@@ -37,6 +37,9 @@ This entire game was written in C, and runs on the command line. Here's how to p
     Paste into terminal: gcc blackjack.c -o blackjack
     Type: ./blackjack
 
+    P.S: I'm not too sure if my info for Mac is correct since I've never used Mac. 
+    Please notify me if anything is incorrect here
+
 ## **BOOM!** Now you can play blackjack on your command line!
 
 ## How to play blackjack (if you don't know):
@@ -69,13 +72,3 @@ JUST LOOK AT THIS COOL ART!
     
 ## When playing, put your terminal in full screen for the best experience!
 ## Hope you have fun!
-
-    
-
-
-    P.S: I'm not too sure if my info for Mac is correct since I've never used Mac. 
-    Please notify me if anything is incorrect here
-
-
-
-
