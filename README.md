@@ -6,13 +6,12 @@ It plays like a normal game of blackjack, but without the betting (you just play
 You can play over and over again! Perfect for if you are doing something but are bored!
 This entire game was written in C, and runs on the command line. Here's how to play:
 
-## If you don't feel like downloading a C compiler (It's a lot of work, I understand):
-    - Copy all the code found in the file "blackjack.c"
-    - Paste it into this link "<https://onecompiler.com/c>"
-    - Press run!
-    - This method has a few visual bugs, since the program was made for the command line, and not an online compiler
+## If you just want to play
+    - Go to the Github Release <https://github.com/sbhi-cs/C-Blackjack/releases/tag/v1.0.0>
+    - Follow instructions from there, and download the corresponding zip file for your OS
+    - Run the executable file!
 
-## If you really want to play this on your command line:
+## If you really want to play this on your command line, but want to compile it yourself to be safe:
     Download the folder off of github, and save it in a place you know you can find it
     Download a C compiler:
         Windows: Use this tutorial: https://www.msys2.org/
