@@ -1,0 +1,62 @@
+name: Universal OS Compiler
+
+on:
+  push:
+    branches: [ "main" ] # Triggers every time you push code to the main branch
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # Boots up all three operating systems in the cloud at once
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # --- STEP FOR WINDOWS ---
+    - name: Compile for Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        gcc blackjack.c -o blackjack-windows.exe
+
+    # --- STEP FOR LINUX ---
+    - name: Compile for Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        gcc -static blackjack.c -o blackjack-linux
+
+    # --- STEP FOR MAC ---
+    - name: Compile for macOS
+      if: matrix.os == 'macos-latest'
+      run: |
+        gcc blackjack.c -o blackjack-mac
+
+    # --- UPLOAD WINDOWS FILE ---
+    - name: Upload Windows Artifact
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: blackjack-windows
+        path: blackjack-windows.exe
+
+    # --- UPLOAD LINUX FILE ---
+    - name: Upload Linux Artifact
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: blackjack-linux
+        path: blackjack-linux
+
+    # --- UPLOAD MAC FILE ---
+    - name: Upload macOS Artifact
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: blackjack-mac
+        path: blackjack-mac
